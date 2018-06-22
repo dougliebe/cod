@@ -125,8 +125,9 @@ data %>%
   group_by(team, opp,set, hp) %>%
   summarise(l = sum(gain, na.rm = T)) %>%
   ungroup() %>%
-  group_by(hp) %>%
-  summarise(sd = sd(l, na.rm = T)) %>% data.frame()
+  group_by(hp, set) %>%
+  summarise(sd = sd(l, na.rm = T)) %>% 
+  summarise(sd = mean(sd)) %>% data.frame()
 
 ttt <- data %>%
   group_by(team) %>%
