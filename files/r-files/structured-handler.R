@@ -2,7 +2,7 @@ library(jsonlite)
 library(ggplot2)
 library(scales)
 
-
+setwd('~/Documents/CoD/')
 data_json <- read_json('structured-1512763928-84948098-de5c-5da6-bc95-7b9e91643a75.json', simplifyVector = T)
 events <- (data_json$events)
 data <- subset(events, events$type == 'death')
@@ -16,7 +16,7 @@ time <- seq(start_time, start_time+length(hp)-1) # shift 10 secs to account for 
 set <- rep(seq(1,4),each = 60*1000*4)
 df <- data.frame(time,hp, set)
 data = merge(data, df, by.x = 'time_ms', by.y = 'time')
-data$data = merge(data$data, team_players, by.x = 'id', by.y = 'name')
+data$data <- merge(data$data, team_players, by.x = 'id', by.y = 'name')
 
 data1 <- subset(data$data$pos, data$data$pos$x < 6000 & data$data$pos$y > -5000)
 data2 <- subset(data$data$attacker$pos, data$data$attacker$pos$x < 6000 & data$data$attacker$pos$y > -5000)
