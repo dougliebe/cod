@@ -3,10 +3,10 @@ library(ggplot2)
 library(scales)
 library(png)
 
-setwd('~/Documents/CoD/')
-img <- readPNG('maps/sainte_marie_du_mont.png')
+setwd('C:/Users/Doug/Documents/CoD/')
+img <- readPNG('cwl-data/maps/ww2/sainte_marie_du_mont.png')
 
-filenames <- list.files( path = 'structured/structured-2018-06-17-anaheim',pattern="*.json", full.names=TRUE)
+filenames <- list.files( path = 'cwl-data/data/structured/structured-2018-06-17-anaheim',pattern="*.json", full.names=TRUE)
 
 output <- data.frame()
 
@@ -17,7 +17,7 @@ if(data_json$map == "Sainte Marie du Mont" & !is.null(nrow(data_json$events))){
 events <- (data_json$events)
 data <- subset(events, events$type == 'death')
 
-team_players <- data.frame(name = data_json$players$name, killed.team = data_json$players$team)
+team_players <- data.frame(name = data_json$players$name, player.team = data_json$players$team)
 
 start_time = 5000
 
@@ -27,6 +27,7 @@ set <- rep(seq(1,4),each = 60*1000*4)
 df <- data.frame(time,hp, set)
 data = merge(data, df, by.x = 'time_ms', by.y = 'time')
 new <- merge(data$data, team_players, by.x = 'id', by.y = 'name')
+new$attacker <- merge(new$attacker, team_players,by.x = 'id', by.y = 'name')
 output <- rbind(output, data.frame(kill = 0, new$pos))
 output <- rbind(output, data.frame(kill = 1, new$attacker$pos))
 }}
