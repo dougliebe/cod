@@ -6,7 +6,7 @@ filenames <- list.files( pattern="*.csv", full.names=TRUE)
 
 output <- data.frame()
 
-for (i in 1:(length(filenames)-2)) {
+for (i in 1:(length(filenames))) {
   data <- read.csv(filenames[i])
   data <- subset(data, data$mode == 'Hardpoint')
   output <- rbind(output, data)
