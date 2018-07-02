@@ -78,7 +78,7 @@ output %>%
 
 map1 = 'Sainte Marie du Mont'
 output %>%
-  filter(map == map1, team == "RED-RESERVE-EU") %>%
+  filter(map == map1) %>%
   dplyr::group_by(team, opp,id, hp, win) %>%
   dplyr::summarise(score = sum(score)) %>%
   dplyr::mutate(outscore = ifelse(score > 0, 1, 0)) %>%
@@ -89,17 +89,18 @@ output %>%
   dplyr::group_by(outscore, hp) %>%
   dplyr::summarise(n = n(), win_pct = mean(win)) 
   # filter(win == T, hp == 3) %>% data.frame()
-output %>%
-  filter(map == map1, team == "RED-RESERVE-EU") %>%
+d = output %>%
+  filter(map == map1) %>%
   dplyr::group_by(team, opp,id, hp, win) %>%
   dplyr::summarise(score = sum(score)) %>%
   dplyr::mutate(outscore = ifelse(score > 0, 1, 0)) %>%
   dplyr::ungroup() %>%
-  # dplyr::group_by(team) %>%
-  # dplyr::mutate(winpct = round(mean(win == T),2)) %>%
-  # dplyr::ungroup() %>%
-  dplyr::group_by(win, hp) %>%
-  dplyr::summarise(n = n(), pdif = mean(score)) 
+  dplyr::group_by(team) %>%
+  dplyr::mutate(winpct = round(mean(win == T),2)) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(team, win, hp, winpct) %>%
+  dplyr::summarise(n = n(), pdif = mean(score)) %>% 
+  filter(hp == 3, win == T, n > 5) %>% data.frame()
 
 
 output %>%
