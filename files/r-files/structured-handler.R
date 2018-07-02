@@ -28,15 +28,15 @@ df <- data.frame(time,hp, set)
 data = merge(data, df, by.x = 'time_ms', by.y = 'time')
 new <- merge(data$data, team_players, by.x = 'id', by.y = 'name')
 new$attacker <- merge(new$attacker, team_players,by.x = 'id', by.y = 'name')
-output <- rbind(output, data.frame(kill = 0, new$pos))
-output <- rbind(output, data.frame(kill = 1, new$attacker$pos))
+output <- rbind(output, data.frame(kill = 0, new$pos, hp = data$hp))
+output <- rbind(output, data.frame(kill = 1, new$attacker$pos, hp = data$hp))
 }}
 
 
 h = dim(img)[1]
 w = dim(img)[2]
-data1 <- subset(output, output$kill == 0 & !is.na(output$x))
-data2 <- subset(output, output$kill == 1 & !is.na(output$x))
+data1 <- subset(output, output$kill == 0 & !is.na(output$x) & output$hp == 3)
+data2 <- subset(output, output$kill == 1 & !is.na(output$x) & output$hp == 3)
 
 ## Show the differences in where we score and don't
 library(reshape2) # For melt function
@@ -54,8 +54,8 @@ xrng = range(c(data1$x, data2$x))
 yrng = range(c(data1$y, data2$y))
 
 # Calculate the 2d density estimate over the common range
-d1 = kde2d(data1$x, data1$y, lims=c(xrng, yrng), n=10)
-d2 = kde2d(data2$x, data2$y, lims=c(xrng, yrng), n=10)
+d1 = kde2d(data1$x, data1$y, lims=c(xrng, yrng), n=500)
+d2 = kde2d(data2$x, data2$y, lims=c(xrng, yrng), n=500)
 
 # Confirm that the grid points for each density estimate are identical
 identical(d1$x, d2$x) # TRUE
@@ -64,7 +64,7 @@ identical(d1$y, d2$y) # TRUE
 # Calculate the difference between the 2d density estimates
 diff12 = d1 
 # diff12$z = d1$z - d2$z
-diff12$z = pmin(d2$z / (d1$z+1E-9),2)
+diff12$z = pmax(pmin(d2$z / (d1$z+1E-9),1.5),0.5)
 m <- mean(diff12$z)
 s <- sd(diff12$z)
 # diff12$z <- scale(diff12$z)
