@@ -50,20 +50,12 @@ for(j in 1:length(location)) {
     }}}
 
 output %>%
+  # filter(map == 'Sainte Marie du Mont') %>%
   dplyr::filter(win == TRUE) %>%
-  dplyr::group_by(team, map, hp) %>%
-  dplyr::summarise(score_per_hill = mean(score), n = n()) %>%
-  dplyr::ungroup() %>%
-  dplyr::group_by(map, hp) %>%
-  dplyr::mutate(plusminus = score_per_hill - mean(score_per_hill)) %>%
-  filter(map == 'Sainte Marie du Mont') %>%
-  merge(hp_wt, by = 'hp') %>%
-  dplyr::mutate(wpm = wt*plusminus) %>%
-  filter(n > 20) %>%
-  dplyr::ungroup() %>%
-  dplyr::group_by(team,map) %>%
-  dplyr::summarise(total_adv = sum(plusminus), n = sum(n)) %>%
-  dplyr::arrange(desc(total_adv))
+  dplyr::group_by(event, team, opp,id, hp, win, map) %>%
+  dplyr::summarise(score = sum(score)) %>%
+  filter(id == 'c1119828-62d8-512a-a4fd-9ef16df56a7f') %>% arrange((score))
+
 
 output %>%
   filter(map == 'Sainte Marie du Mont') %>%
@@ -103,6 +95,3 @@ d = output %>%
   filter(hp == 3, win == T, n > 5) %>% data.frame()
 
 
-output %>%
-  filter(team == "RED-RESERVE-EU",map == 'Sainte Marie du Mont') %>%
-  
