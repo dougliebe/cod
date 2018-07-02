@@ -46,7 +46,7 @@ for(j in 1:length(location)) {
       # data <- merge(data, team_players, by.x = 'data.attacker.id', by.y = 'name')
       # # data <- merge(data, team_rounds, by = c('player.team', 'round'))
       # output <- rbind(output, data.frame(map = data_json$map, offdef = data$offdef, x = data$data.attacker.pos.x, y = data$data.attacker.pos.y))
-      output <- rbind(output, data.frame(pt_chart, map = data_json$map, id = data_json$id, code = data_json$series_id))
+      output <- rbind(output, data.frame(pt_chart, map = data_json$map, id = data_json$id, code = data_json$series_id, event = location[j]))
     }}}
 
 output %>%
@@ -79,16 +79,16 @@ output %>%
 map1 = 'Sainte Marie du Mont'
 output %>%
   filter(map == map1) %>%
-  dplyr::group_by(team, opp,id, hp, win) %>%
+  dplyr::group_by(event, team, opp,id, hp, win) %>%
   dplyr::summarise(score = sum(score)) %>%
   dplyr::mutate(outscore = ifelse(score > 0, 1, 0)) %>%
   dplyr::ungroup() %>%
   # dplyr::group_by(team) %>%
   # dplyr::mutate(winpct = round(mean(win == T),2)) %>%
   # dplyr::ungroup() %>%
-  dplyr::group_by(outscore, hp) %>%
-  dplyr::summarise(n = n(), win_pct = mean(win)) 
-  # filter(win == T, hp == 3) %>% data.frame()
+  dplyr::group_by(event,outscore, hp) %>%
+  dplyr::summarise(n = n(), win_pct = mean(win)) %>%
+  filter(outscore == 1, hp == 3) %>% data.frame()
 d = output %>%
   filter(map == map1) %>%
   dplyr::group_by(team, opp,id, hp, win) %>%
