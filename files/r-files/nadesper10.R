@@ -6,7 +6,7 @@ library(dplyr)
 
 setwd('C:/Users/Doug/Documents/CoD/')
 # set blank output
-output <- data.frame()
+allhpdata <- data.frame()
 start_time = 5000
 # For each event folder
 location <- list.files(path = 'cwl-data/data/structured', pattern = "structured")
@@ -54,13 +54,13 @@ for(j in 1:length(location)) {
       # data <- merge(data, team_rounds, by.x = c('player.team.x', 'round'),
                     # by.y = c('player.team', 'round')) # win or not?
       # add row plus gun, win and name
-      output <- rbind(output, data.frame(map = data_json$map, time = data_json$duration_ms/1000, id = data_json$id, data))
+      allhpdata <- rbind(allhpdata, data.frame(map = data_json$map, time = data_json$duration_ms/1000, id = data_json$id, data, event = location[j], bracket = data_json$series_id))
     }
   }
 }
 
 # Get per 10 min by means of death
-output %>%
+allhpdata %>%
   mutate(nade = ifelse(data.attacker.means_of_death == 'melee',1,0)) %>%
   dplyr::group_by(id, round, data.attacker.id) %>%
   dplyr::summarise(nade_per_game = sum(nade), time = max(time/600), n = n()) %>%
@@ -72,21 +72,18 @@ output %>%
 
 
 #kdr by hill
-kills <- output %>%
-  group_by(map,  data.attacker.id) %>%
-  summarise(kills = n()) 
-deaths <- output %>%
-  group_by(map, data.id) %>%
+kills <- allhpdata %>%
+  group_by(id, set,map, hp, data.attacker.id) %>%
+  summarise(kills = n()) %>% 
+  arrange(desc(kills))
+deaths <- allhpdata %>%
+  group_by(map, hp, data.id) %>%
   summarise(deaths = n())
-kdr <- merge(kills, deaths , by.x = c('data.attacker.id', 'map'), by.y = c('data.id', 'map'))
+kdr <- merge(kills, deaths , by.x = c('data.attacker.id', 'map','hp'), by.y = c('data.id', 'map','hp'))
 kdr$kdr <- kdr$kills/kdr$deaths
 kdr$n <- kdr$kills+kdr$deaths
 kdr %>%
-  filter(n > 200,map == "Sainte Marie du Mont") %>%
+  filter(n > 200,map == "Ardennes Forest", hp == 1) %>%
   arrange(desc(kdr)) %>% head()
 
 
-%>%
-  ungroup() %>%
-  group_by(data.attacker.id, map, hp) %>%
-  summarise(m = mean(kills))
