@@ -62,10 +62,10 @@ for(j in 1:length(location)) {
 
 output %>%
   mutate(nade = ifelse(data.attacker.means_of_death == 'grenade_splash',1,0)) %>%
-  dplyr::group_by(map, id, round, data.attacker.id) %>%
+  dplyr::group_by(id, round, data.attacker.id) %>%
   dplyr::summarise(nade_per_game = sum(nade), time = max(time/60), n = n()) %>%
   ungroup() %>%
-  group_by(map, data.attacker.id) %>%
+  group_by(data.attacker.id) %>%
   summarise(nade10 = sum(nade_per_game)/sum(time), minutes = sum(n)) %>%
-  filter(minutes > 50) %>%
+  filter(minutes > 1000) %>%
   arrange(desc(nade10))
