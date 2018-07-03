@@ -7,7 +7,7 @@ library(png)
 library(dplyr)
 
 setwd('C:/Users/Doug/Documents/CoD/')
-img <- readPNG('cwl-data/maps/ww2/sainte_marie_du_mont.png')
+img <- readPNG('cwl-data/maps/ww2/valkyrie.png')
 output <- data.frame()
 
 # Go through all games all events
