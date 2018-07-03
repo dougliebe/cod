@@ -7,7 +7,7 @@ library(dplyr)
 setwd('C:/Users/Doug/Documents/CoD/')
 # set blank output
 output <- data.frame()
-
+start_time = 5000
 # For each event folder
 location <- list.files(path = 'cwl-data/data/structured', pattern = "structured")
 for(j in 1:length(location)) {
@@ -59,13 +59,34 @@ for(j in 1:length(location)) {
   }
 }
 
-
+# Get per 10 min by means of death
 output %>%
-  mutate(nade = ifelse(data.attacker.means_of_death == 'grenade_splash',1,0)) %>%
+  mutate(nade = ifelse(data.attacker.means_of_death == 'melee',1,0)) %>%
   dplyr::group_by(id, round, data.attacker.id) %>%
-  dplyr::summarise(nade_per_game = sum(nade), time = max(time/60), n = n()) %>%
+  dplyr::summarise(nade_per_game = sum(nade), time = max(time/600), n = n()) %>%
   ungroup() %>%
   group_by(data.attacker.id) %>%
   summarise(nade10 = sum(nade_per_game)/sum(time), minutes = sum(n)) %>%
   filter(minutes > 1000) %>%
   arrange(desc(nade10))
+
+
+#kdr by hill
+kills <- output %>%
+  group_by(map,  data.attacker.id) %>%
+  summarise(kills = n()) 
+deaths <- output %>%
+  group_by(map, data.id) %>%
+  summarise(deaths = n())
+kdr <- merge(kills, deaths , by.x = c('data.attacker.id', 'map'), by.y = c('data.id', 'map'))
+kdr$kdr <- kdr$kills/kdr$deaths
+kdr$n <- kdr$kills+kdr$deaths
+kdr %>%
+  filter(n > 200,map == "Sainte Marie du Mont") %>%
+  arrange(desc(kdr)) %>% head()
+
+
+%>%
+  ungroup() %>%
+  group_by(data.attacker.id, map, hp) %>%
+  summarise(m = mean(kills))
