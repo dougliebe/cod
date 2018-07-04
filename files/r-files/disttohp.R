@@ -4,20 +4,18 @@ library(ggplot2)
 library(scales)
 library(png)
 library(gridExtra)
-library(gganimate)
+library(RColorBrewer)
+# library(gganimate)
 
-#set wd
-setwd('C:/Users/JP/Documents/codstats/wwii_structured')
-img <- readPNG('cwl-data/maps/ww2/london_docks.png')
-#make df to put output in
+setwd('C:/Users/Doug/Documents/CoD/')
+img <- readPNG('cwl-data/maps/ww2/gibraltar.png')
 output <- data.frame()
 
 # Go through all games all events
-location <- list.files(path = 'data', pattern = "structured")
+location <- list.files(path = 'cwl-data/data/structured', pattern = "structured")
 for(j in 1:length(location)) {
-  
-  filenames <- list.files(path = paste('data/',location[j], sep = ""),pattern="*.json", full.names=TRUE)
-  print(location[j]) # show when you start each new event
+  filenames <- list.files( path = paste('cwl-data/data/structured/',location[j], sep = ""),pattern="*.json", full.names=TRUE)
+  print(location[j])
   
   
   for (i in 1:length(filenames)) {
@@ -26,7 +24,7 @@ for(j in 1:length(location)) {
     data_json <- fromJSON(filenames[i], simplifyVector = T)
     # I filter out by mode,
     # but you can change this to whatever
-    if(data_json$mode == "Hardpoint" & data_json$map == "Gibraltar" & !is.null(nrow(data_json$events))){
+    if(data_json$mode == "Hardpoint" &  !is.null(nrow(data_json$events))){
       
       # get just spawns and deaths
       events <- (data_json$events)
@@ -53,30 +51,79 @@ for(j in 1:length(location)) {
       if (length(data_json$hp_hill_names)==4) {
         hp <- rep(seq(1,4),4, each = 60*1000)
         time <- seq(start_time, start_time+length(hp)-1) # shift 10 secs to account for rotation
-        dur <- (time-start_time)%%60
+        dur <- (time-start_time)%%60000
         set <- rep(seq(1,4),each = 60*1000*4)
         df <- data.frame(time, dur,hp, set)
         data = merge(data, df, by.x = 'time_ms', by.y = 'time')
         # only works for this hardpoint example with 4 hps
         # you can add others tho
-        
-        data$dist1 <- sqrt(((data$data.attacker.pos.x-500)^2)+((data$data.attacker.pos.y-500)^2))
-        data$dist2 <- sqrt(((data$data.attacker.pos.x-750)^2)+((data$data.attacker.pos.y-500)^2))
-        data$dist3 <- sqrt(((data$data.attacker.pos.x-300)^2)+((data$data.attacker.pos.y-375)^2))
-        data$dist4 <- sqrt(((data$data.attacker.pos.x-550)^2)+((data$data.attacker.pos.y-700)^2))
-        data$closerto <- ifelse(data$hp == 1, ifelse(data$dist1 < data$dist2,1,2), 
-                                ifelse(data$hp == 2, ifelse(data$dist2 < data$dist3, 2,3),
-                                ifelse(data$hp == 3, ifelse(data$dist3 < data$dist4,3,4),
-                                       ifelse(data$dist4< data$dist1, 4,1))))
+        if(data_json$map == "Gibraltar") {
+          #gibraltar
+          hill1 = c(500,500)
+          hill2 = c(750, 500)
+          hill3 = c(300, 375)
+          hill4 = c(550, 700)
+        } else if (data_json$map == "Ardennes Forest") {
+          # ardennes
+          hill1 = c(525,220)
+          hill2 = c(500,750)
+          hill3 <- c(375,375)
+          hill4 <- c(600, 500)
+        } else if (data_json$map == "Sainte Marie du Mont") {
+          # st marie
+          hill1 = c(500,525)
+          hill2 = c(350,125)
+          hill3 <- c(650,800)
+          hill4 <- c(250, 525)
+        }
+
+
+        data$dist1 <- (((data$data.attacker.pos.x-hill1[1])^2)+((data$data.attacker.pos.y-hill1[2])^2) <= 250^2)*1
+        data$dist2 <- (((data$data.attacker.pos.x-hill2[1])^2)+((data$data.attacker.pos.y-hill2[2])^2) <= 250^2)*1
+        data$dist3 <- (((data$data.attacker.pos.x-hill3[1])^2)+((data$data.attacker.pos.y-hill3[2])^2) <= 250^2)*1
+        data$dist4 <- (((data$data.attacker.pos.x-hill4[1])^2)+((data$data.attacker.pos.y-hill4[2])^2) <= 250^2)*1
+        data$dist5 <- 0
+        data$closerto <- ifelse(data$hp == 1 & data$dist1 == 1, 1, 
+                                ifelse(data$hp == 2 & data$dist2 == 1, 1,
+                                ifelse(data$hp == 3 & data$dist3 == 1, 1,
+                                ifelse(data$hp == 4 & data$dist4 == 1, 1,0))))
       } else {
         hp <- rep(seq(1,5),4, each = 60*1000)
         time <- seq(start_time, start_time+length(hp)-1) # shift 10 secs to account for rotation
-        dur <- (time-start_time)%%60
+        dur <- (time-start_time)%%60000
         set <- rep(seq(1,5),each = 60*1000*4)
         df <- data.frame(time,dur,hp, set)
-        data = merge(data, df, by.x = 'time_ms', by.y = 'time')}
+        
+        data = merge(data, df, by.x = 'time_ms', by.y = 'time')
+        if( data_json$map == "London Docks") {
+          #london docks
+          hill1 = c(500,550)
+          hill2 = c(700,650)
+          hill3 <- c(250,550)
+          hill4 <- c(550, 350)
+          hill5 <- c(425, 900)
+        } else {
+          # valk
+          hill1 = c(525,475)
+          hill2 = c(475,275)
+          hill3 <- c(475,740)
+          hill4 <- c(300, 425)
+          hill5 <- c(750, 625)
+        }
+        data$dist1 <- (((data$data.attacker.pos.x-hill1[1])^2)+((data$data.attacker.pos.y-hill1[2])^2) <= 250^2)*1
+        data$dist2 <- (((data$data.attacker.pos.x-hill2[1])^2)+((data$data.attacker.pos.y-hill2[2])^2) <= 250^2)*1
+        data$dist3 <- (((data$data.attacker.pos.x-hill3[1])^2)+((data$data.attacker.pos.y-hill3[2])^2) <= 250^2)*1
+        data$dist4 <- (((data$data.attacker.pos.x-hill4[1])^2)+((data$data.attacker.pos.y-hill4[2])^2) <= 250^2)*1
+        data$dist5 <- (((data$data.attacker.pos.x-hill5[1])^2)+((data$data.attacker.pos.y-hill5[2])^2) <= 250^2)*1
+        data$closerto <- ifelse(data$hp == 1 & data$dist1 == 1, 1, 
+                                ifelse(data$hp == 2 & data$dist2 == 1, 1,
+                                       ifelse(data$hp == 3 & data$dist3 == 1, 1,
+                                              ifelse(data$hp == 4 & data$dist4 == 1, 1,
+                                                     ifelse(data$hp == 5 & data$dist5 == 1, 1, 0)))))
+        
+        }
 
-      
+        
       
       data<-merge(data, team_players, by.x ='data.attacker.id', by.y = 'name')
       output<-rbind(output,data)
@@ -85,36 +132,52 @@ for(j in 1:length(location)) {
 h=dim(img)[1]
 w=dim(img)[2]
 
-gib1 <- subset(output, output$hp == 1 & output$dur > 40)
+gib1 <- subset(output,output$map == "Gibraltar" &  output$dur > 40000 & output$hp == 2)
 ggplot(data=gib1) +
   annotation_custom(grid::rasterGrob(img, width=unit(1,"npc"), height=unit(1,"npc")), 0, w, 0,-h) +
-  theme_bw() + theme(legend.position = 'none',axis.title = element_blank(), axis.text = element_blank()) +
+  theme_bw() + theme(legend.position = 'none',axis.title = element_blank()) +
   coord_equal() + # To keep the aspect ratio of the image.
   scale_x_continuous(expand=c(0,0),limits=c(0,w)) +
   scale_y_reverse(expand=c(0,0),limits=c(h,0)) +
-  geom_point(aes(data.attacker.pos.x,data.attacker.pos.y,color = closerto)) +
-  geom_point(aes(x = 500, y = 500), shape = 17, size = 5, color = 'yellow') +
-  geom_point(aes(x = 750, y = 500), shape = 17, size = 5, color = 'yellow') +
+  geom_point(aes(data.attacker.pos.x,data.attacker.pos.y,color = as.factor(closerto))) +
+  scale_color_manual(values=c("#CC6666", "#9999CC")) +
+  geom_point(aes(x = hill3[1], y = hill3[2]), shape = 17, size = 5, color = 'yellow') +
+  geom_point(aes(x = hill2[1], y = hill2[2]), shape = 17, size = 5, color = 'yellow') +
   # stat_bin2d(binwidth=3,aes(x,y,alpha=(..count..)^(1/2))) +
   # stat_binhex(aes(x=x, y=y, alpha=(..density..)^1), bins = 40) +
   # scale_fill_gradientn(colours=c( ('green'), ('yellow'),("red")),name = "Frequency") +
   # guides(alpha="none") +
   # ggtitle(label = paste(team1, " setup on HP #", hpt, sep = ""))
-  ggtitle(label = "Kills on hp 1")
+  ggtitle(label = "Last 20 seconds of Hill #2 - Gibraltar")
+
 
 kills<-output %>%
-  group_by(map,data.attacker.id,rot) %>%
+  mutate(rot = ifelse(closerto ==0 & dur > 40000,1,0))%>%
+  filter(rot == 1) %>%
+  group_by(data.attacker.id, map) %>%
   summarise(kills=n())
 deaths<-output %>%
-  group_by(map,data.id,rot) %>%
+  mutate(rot = ifelse(closerto == 0 & dur > 40000,1,0))%>%
+  filter(rot == 1) %>%
+  group_by(data.id, map) %>%
   summarise(deaths=n())
-KD<-merge(kills,deaths, by.x=c("data.attacker.id",'map','rot'),by.y=c('data.id','map','rot'))
-KD$KD<-KD$kills/KD$deaths
+KD<-merge(kills,deaths, by.x=c("data.attacker.id", 'map'),by.y=c('data.id', 'map'))
+KD$KD <- KD$kills/KD$deaths
 KD$n<-KD$kills+KD$deaths
 KD %>%
-  filter (n>60,map=="London Docks",rot==3)%>%
-  ungroup() %>%
-  group_by(data.attacker.id,map,n) %>%
-  summarise(m=KD)%>%
-  arrange(desc(m))%>%
+  filter (n > 100)%>%
+  arrange(desc(KD))%>%
   head()
+
+
+# 
+# cum <- output %>%
+#   mutate(rot = ifelse(dur > 40000,1,0)) %>%
+#   filter(rot == 1) %>%
+#   group_by(map, hp, dur) %>% 
+#   summarise(n = n()) %>%
+#   ungroup() %>%
+#   group_by(map, hp) %>%
+#   mutate(cs = cumsum(n))
+# ggplot(cum[cum$map == "London Docks",] , aes(dur, cs, color = as.factor(hp)))+geom_line(size = 2)+
+#   scale_color_brewer(palette = 'Set1')
