@@ -6,15 +6,18 @@ library(png)
 library(gridExtra)
 library(gganimate)
 
-setwd('C:/Users/Doug/Documents/CoD/')
-img <- readPNG('cwl-data/maps/ww2/gibraltar.png')
+#set wd
+setwd('C:/Users/JP/Documents/codstats/wwii_structured')
+img <- readPNG('cwl-data/maps/ww2/london_docks.png')
+#make df to put output in
 output <- data.frame()
 
 # Go through all games all events
-location <- list.files(path = 'cwl-data/data/structured', pattern = "structured")
+location <- list.files(path = 'data', pattern = "structured")
 for(j in 1:length(location)) {
-  filenames <- list.files( path = paste('cwl-data/data/structured/',location[j], sep = ""),pattern="*.json", full.names=TRUE)
-  print(location[j])
+  
+  filenames <- list.files(path = paste('data/',location[j], sep = ""),pattern="*.json", full.names=TRUE)
+  print(location[j]) # show when you start each new event
   
   
   for (i in 1:length(filenames)) {
