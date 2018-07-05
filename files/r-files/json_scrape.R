@@ -25,11 +25,12 @@ for(j in 1:length(location)) {
       
       # get just spawns and deaths
       events <- (data_json$events)
-      data <- subset(events, events$type == 'death')
+      data <- subset(events, events$type == 'death' | events$type == 'spawn')
       
       # make df of players and teams to match 
-      team_players <- data.frame(name = data_json$players$name, player.team = data_json$players$team, gun = data_json$players$fave_weapon)
-      
+      team_players <- data.frame(name = data_json$players$name, player.team = data_json$players$team,
+                                 gun = data_json$players$fave_weapon)
+      team_players <- rbind(team_players, data.frame(name = NA, player.team = NA, gun = NA))
       # this breaks down list of lists into good data frame
       data = do.call(cbind.data.frame, data)
       data = do.call(cbind.data.frame, data)
@@ -37,7 +38,7 @@ for(j in 1:length(location)) {
       
       #merges with player list to name each attacker
       # I DONT have it name the person who died, but could be added
-      
+      data$data.attacker.id <- as.character(data$data.attacker.id)
       data <- merge(data, team_players, by.x = 'data.attacker.id', by.y = 'name')
       # this binds any data
       # I usually filter out more stuff that I want before this part just to 
