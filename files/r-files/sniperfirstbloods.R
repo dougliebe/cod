@@ -5,6 +5,8 @@ library(png)
 library(dplyr)
 
 setwd('C:/Users/Doug/Documents/CoD/')
+img <- readPNG('cwl-data/maps/ww2/sainte_marie_du_mont.png')
+
 # set blank output
 output <- data.frame()
 
@@ -54,7 +56,7 @@ if(data_json$mode == "Search & Destroy" & !is.null(nrow(data_json$events))){
 
 h = dim(img)[1]
 w = dim(img)[2]
-valk <- subset(output, output$map == "Valkyrie" & output$time_ms < 60000 & output$offdef == 'def'& output$data.attacker.weapon == 'STG-44')
+valk <- subset(output, output$map == "Sainte Marie du Mont" & output$time_ms < 60000 & output$offdef == 'off')
 ggplot(data=valk) +
   annotation_custom(grid::rasterGrob(img, width=unit(1,"npc"), height=unit(1,"npc")), 0, w, 0,-h) +
   theme_bw() + theme(legend.position = 'none',axis.title = element_blank(), axis.text = element_blank()) +
