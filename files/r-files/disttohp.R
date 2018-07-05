@@ -8,7 +8,7 @@ library(RColorBrewer)
 # library(gganimate)
 
 setwd('C:/Users/Doug/Documents/CoD/')
-img <- readPNG('cwl-data/maps/ww2/gibraltar.png')
+img <- readPNG('cwl-data/maps/ww2/sainte_marie_du_mont.png')
 output <- data.frame()
 
 # Go through all games all events
@@ -165,19 +165,24 @@ KD<-merge(kills,deaths, by.x=c("data.attacker.id", 'map'),by.y=c('data.id', 'map
 KD$KD <- KD$kills/KD$deaths
 KD$n<-KD$kills+KD$deaths
 KD %>%
-  filter (n > 100)%>%
+  filter (n > 35, map == "Valkyrie")%>%
   arrange(desc(KD))%>%
   head()
 
 
-# 
-# cum <- output %>%
-#   mutate(rot = ifelse(dur > 40000,1,0)) %>%
-#   filter(rot == 1) %>%
-#   group_by(map, hp, dur) %>% 
-#   summarise(n = n()) %>%
-#   ungroup() %>%
-#   group_by(map, hp) %>%
-#   mutate(cs = cumsum(n))
-# ggplot(cum[cum$map == "London Docks",] , aes(dur, cs, color = as.factor(hp)))+geom_line(size = 2)+
-#   scale_color_brewer(palette = 'Set1')
+
+cum <- output %>%
+  mutate(rot = ifelse(dur > 40000,1,0)) %>%
+  filter(rot == 1) %>%
+  group_by(map, hp, closerto,  dur) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  group_by(map, hp, closerto) %>%
+  mutate(cs = cumsum(n)) %>%
+  ungroup() %>%
+  group_by(map, hp) %>%
+  mutate(pct_engage = cs) %>%
+  filter(closerto == 0)
+ggplot(cum[cum$map == "Sainte Marie du Mont",] , aes(dur/1000, pct_engage, color = as.factor(hp)))+geom_line(size = 2)+
+  scale_color_brewer(palette = 'Set1', name = "Hill Rotation", labels = c("1 to 2", "2 to 3", "3 to 4", "4 to 1", "5 to 1")) +
+  ylab("Rotation Engagements") + xlab("Current Hill Duration") + ggtitle("St. Marie Engagements \nAway from Current HP")
