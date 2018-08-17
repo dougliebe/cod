@@ -6,7 +6,7 @@ filenames <- list.files( pattern="*.csv", full.names=TRUE)
 
 output <- data.frame()
 
-for (i in (length(filenames)-1):(length(filenames))) {
+for (i in 1:length(filenames)) {
   data <- read.csv(filenames[i])
   data <- subset(data, data$mode == 'Hardpoint') # sort by mode
   output <- rbind(output, data)
@@ -14,7 +14,17 @@ for (i in (length(filenames)-1):(length(filenames))) {
 
 output %>%
   mutate(win = ifelse(win. == "W",1,0)) %>%
-  group_by(team) %>%
-  summarise(wins = mean(win), W = sum(win), L = n()-W, n = n()) %>%
-  filter(team == "Team Kaliber") %>%
+  group_by(match.id, team,map) %>%
+  summarise(wins = mean(win)) %>%
+  ungroup() %>%
+  group_by(team,map) %>%
+  summarise(wins = mean(wins), W = n()*wins, L = n()-W, n = n()) %>%
+  filter(team == "Complexity") %>%
   arrange(desc(wins))
+
+output %>%
+  group_by(player, map) %>%
+  summarise(m = sum(kills)/sum(deaths), n = n()) %>%
+  filter(player == 'Denz') %>%
+  arrange(desc(m))
+  

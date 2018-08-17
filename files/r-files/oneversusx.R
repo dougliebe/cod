@@ -117,5 +117,17 @@ pct <- merge(wins, loss , by.x = c('data.attacker.id', 'x'), by.y = c('data.id',
 pct$pct_won <- round(pct$wins/ (pct$wins+pct$losses),2)
 pct$n <- pct$wins + pct$losses
 pct %>%
-  filter(x == 3) %>% #change filter to see 1vX
-  arrange(desc(wins)) %>% head()
+  filter(x==4) %>% #change filter to see 1vX
+  arrange(desc(pct_won)) %>% head()
+
+
+pct %>%
+  mutate(wwins = ifelse(x == 1, wins,
+                        ifelse(x == 2, wins*4,
+                               ifelse(x == 3 | x == 4, wins*20, wins)))) %>%
+  mutate(wlosses = losses*20) %>%
+
+  group_by(data.attacker.id) %>%
+  summarise(wpct = sum(wwins)/sum(wlosses), n = sum(n)) %>%
+  # filter(n > 20) %>%
+  arrange(desc(wpct)) %>% data.frame() %>% head()

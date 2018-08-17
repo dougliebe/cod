@@ -37,7 +37,7 @@ if(data_json$mode == "Search & Destroy" & !is.null(nrow(data_json$events))){
     data = do.call(cbind.data.frame, data)
     data = do.call(cbind.data.frame, data)
   
-    #if kill was earliest in round, label first blood
+    # #if kill was earliest in round, label first blood
     # data <- data %>%
     #   dplyr::group_by(round) %>%
     #   dplyr::mutate(first_kill = ifelse(round_time_ms == min(round_time_ms),1,0)) %>%

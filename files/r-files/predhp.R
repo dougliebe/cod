@@ -90,6 +90,15 @@ o <- output %>%
   mutate(pred_win_pct = lag(game_win_pct,1),pred_win = lag(wins,1), pred_kills = lag(kills,1)) %>%
   data.frame()
 
+
+## testing on stage 2 data
+last <- o %>%
+  group_by(team.x, map) %>%
+  summarise(wins = last(wins), n = max(rounds)) %>%
+  mutate(w = round(wins*n), l = n-w)
+
+
+
 oppoff <- o 
 # %>%
 #   filter(offdef == 'off')
@@ -116,7 +125,7 @@ summary(m)
 exp(coefficients(m))
 
 
-m <- glmer(win.x ~ pred_win.x + (1|map.x), data = oo, family = 'binomial')
+m <- glm(win.x ~ pred_win.x + pred_win.y, data = o, family = 'binomial')
 summary(m)
 exp(coefficients(m))
 
@@ -141,19 +150,12 @@ summary(m_gib)
 exp(coefficients(m_gib))
 
 
-## testing on stage 2 data
-last <- o %>%
-  group_by(team.x, map) %>%
-  summarise(wins = last(wins), n = max(rounds.x)) %>%
-  mutate(w = round(wins*n), l = n-w)
-
-
 #function that returns winprob
 winprob <- function(data) {
   r = ifelse(data$map == "Sainte Marie du Mont", predict(m_sm, data),
          ifelse(data$map == 'London Docks', predict(m_ld, data),
                 ifelse(data$map == 'Ardennes Forest', predict(m_af, data), 
-                       ifelse(data$map == "Gibraltar",predict(m_gib,data),0))))
+                       ifelse(data$map == "Gibraltar",predict(m_gib,data),predict(m_ld,data)))))
   return(exp(r)/(1+exp(r)))
 }
 
@@ -198,7 +200,7 @@ d %>%
 
 
 # New predicitons
-df <- expand.grid(team.x = 'COMPLEXITY-GAMING', opp = 'TAINTED-MINDS', map = unique(last$map))
+df <- expand.grid(team.x = 'EUNITED', opp = 'LUMINOSITY GAMING', map = unique(last$map))
 df = df %>%
   full_join(last, by = c('team.x'='team.x','map'='map')) %>%
   full_join(last, by = c('opp'='team.x','map'='map')) %>%

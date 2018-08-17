@@ -12,11 +12,52 @@ for (i in 1:(length(filenames))) {
   output <- rbind(output, data)
 }
 
-output %>%
-  mutate(ksapr = kills..stayed.alive./num.lives) %>%
-  group_by( map,player) %>%
-  summarise(ksa_rd = sum(kills..stayed.alive.)/sum(num.lives), rounds = sum(num.lives)) %>%
-  filter(rounds > 150) %>% arrange(desc(ksa_rd))
+# Rating 0.1 snd
+rating <- output %>%
+  mutate(kpr = kills/snd.rounds) %>%
+  mutate(ksapr = kills..stayed.alive./snd.rounds) %>%
+  mutate(dmg = hits/snd.rounds) %>%
+  mutate(apr = assists/snd.rounds) %>%
+  mutate(fpr = snd.firstbloods/snd.rounds) %>%
+  mutate(mkpr = (snd.2.kill.round+snd.4.kill.round+snd.3.kill.round)/snd.rounds) %>%
+  mutate(kas = (kills+assists+snd.survives)/snd.rounds) %>%
+  mutate(sepr = scorestreaks.earned/snd.rounds) %>%
+  # mutate(dpk = hits/(kills+1E-9)) %>%
+  mutate(win = ifelse(win. == "W",1,0))
+
+m <- glm(win ~ ksapr + apr + fpr, rating, family = 'binomial')
+summary(m)
+exp(coefficients(m))
+rating$rating  <- round(exp(predict(m, rating))/(1+exp(predict(m, rating))),2)+1
+rating %>%
+  group_by(player) %>%
+  # summarise(rating_avg = mean(rating, na.rm = T), n = n()) %>%
+  summarise(rating_avg = sum(hits)/sum(kills), n = sum(kills)) %>%
+  filter(n > 200) %>%
+  arrange((rating_avg)) %>% head()
+
+# Rating 0.1 hp
+rating <- output %>%
+  mutate(kpr = kills/duration..s.*600) %>%
+  mutate(ksapr = kills..stayed.alive./duration..s.*600) %>%
+  mutate(dmg = hits/duration..s.*600) %>%
+  mutate(apr = assists/duration..s.*600) %>%
+  mutate(mkpr = (snd.2.kill.round+snd.4.kill.round+snd.3.kill.round)/duration..s.*600) %>%
+  mutate(sepr = scorestreaks.earned/duration..s.*600) %>%
+  mutate(win = ifelse(win. == "W",1,0))
+
+m <- glm(win ~ ksapr + apr + sepr, rating, family = 'binomial')
+summary(m)
+exp(coefficients(m))
+rating$rating  <- round(predict(m, rating),2)+1
+rating %>%
+  group_by(player) %>%
+  summarise(rating_avg = mean(rating, na.rm = T), n = n()) %>%
+  filter(n > 50) %>%
+  arrange(desc(rating_avg)) %>% head()
+
+
+
 
 #sort output
 output <- output %>%
