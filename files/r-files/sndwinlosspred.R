@@ -16,7 +16,7 @@ for (i in 1:(length(filenames))) {
 rating <- output %>%
   mutate(kpr = kills/snd.rounds) %>%
   mutate(ksapr = kills..stayed.alive./snd.rounds) %>%
-  mutate(dmg = hits/snd.rounds) %>%
+  mutate(dpr = deaths/snd.rounds) %>%
   mutate(apr = assists/snd.rounds) %>%
   mutate(fpr = snd.firstbloods/snd.rounds) %>%
   mutate(mkpr = (snd.2.kill.round+snd.4.kill.round+snd.3.kill.round)/snd.rounds) %>%
@@ -25,7 +25,7 @@ rating <- output %>%
   # mutate(dpk = hits/(kills+1E-9)) %>%
   mutate(win = ifelse(win. == "W",1,0))
 
-m <- glm(win ~ ksapr + apr + fpr, rating, family = 'binomial')
+m <- glm(win ~ ksapr + apr + fpr + dpr, rating, family = 'binomial')
 summary(m)
 exp(coefficients(m))
 rating$rating  <- round(exp(predict(m, rating))/(1+exp(predict(m, rating))),2)+1
@@ -40,13 +40,13 @@ rating %>%
 rating <- output %>%
   mutate(kpr = kills/duration..s.*600) %>%
   mutate(ksapr = kills..stayed.alive./duration..s.*600) %>%
-  mutate(dmg = hits/duration..s.*600) %>%
+  mutate(dpr = deaths/duration..s.*600) %>%
   mutate(apr = assists/duration..s.*600) %>%
   mutate(mkpr = (snd.2.kill.round+snd.4.kill.round+snd.3.kill.round)/duration..s.*600) %>%
   mutate(sepr = scorestreaks.earned/duration..s.*600) %>%
   mutate(win = ifelse(win. == "W",1,0))
 
-m <- glm(win ~ ksapr + apr + sepr, rating, family = 'binomial')
+m <- glm(win ~ ksapr + apr + dpr, rating, family = 'binomial')
 summary(m)
 exp(coefficients(m))
 rating$rating  <- round(predict(m, rating),2)+1
@@ -56,7 +56,22 @@ rating %>%
   filter(n > 50) %>%
   arrange(desc(rating_avg)) %>% head()
 
+# Rating 0.1 ctf
+rating <- output %>%
+  mutate(kpr = kills/duration..s.*600) %>%
+  mutate(ksapr = kills..stayed.alive./duration..s.*600) %>%
+  mutate(dpr = deaths/duration..s.*600) %>%
+  mutate(apr = assists/duration..s.*600) %>%
+  mutate(mkpr = (snd.2.kill.round+snd.4.kill.round+snd.3.kill.round)/duration..s.*600) %>%
+  mutate(sepr = scorestreaks.earned/duration..s.*600) %>%
+  mutate(win = ifelse(win. == "W",1,0))
 
+m <- glm(win ~  ksapr + dpr + sepr, rating, family = 'binomial')
+summary(m)
+rating$rating  <- round(exp(predict(m, rating))/(1+exp(predict(m, rating))),2)+1
+
+rating %>%
+  arrange(desc(rating)) %>% head()
 
 
 #sort output

@@ -2,15 +2,17 @@ library(httr)
 library(jsonlite)
 library(lubridate)
 library(RCurl)
+library(dplyr)
 
 url  <- "https://stats.gammaray.io/api/v1/report/cwl-champs-2018/playermatches/"
 
 raw <- getURL(url = url)
 data <- read.csv (text = raw)
+data$date <- as.Date(gsub( " .*$", "", data$end.time ))
 
-hppred <- readRDS('hprating.rds')
-sndpred <- readRDS('sndrating.rds')
-ctfpred <- readRDS('ctfrating.rds')
+hppred <- readRDS('files/hprating.rds')
+sndpred <- readRDS('files/sndrating.rds')
+ctfpred <- readRDS('files/ctfrating.rds')
 
 
 # Rating 0.1 snd
@@ -56,14 +58,24 @@ ratingctf$rating  = round(exp(predict(ctfpred,ratingctf))/(1+exp(predict(ctfpred
 rating <- rbind(rating, ratinghp)
 rating <- rbind(rating, ratingctf)
 
-
+# MVP rating
 rating %>%
-  group_by(team,player) %>%
-  summarise(UA = sum(ifelse(rating > 0.7,1,0)),rating = mean(rating), n = n()) %>%
-  # filter(team == "Mindfreak") %>%
-  # filter(n > 5) %>%
+  filter(date >= as.Date('2018-08-17')) %>%
+  group_by(player,mode) %>%
+  summarise(rating = round(mean(rating),3), maps = n(), games = length(unique(series.id)),
+            utk = round(sum(kills..stayed.alive.)/sum(kills),3),fbr = round(sum(snd.firstbloods)/sum(num.lives),3),
+            fbfd = paste(sum(snd.firstbloods), sum(snd.firstdeaths), sep = ":"),
+            kd = round(sum(kills)/sum(deaths),2),
+            utkdr = sum(kills..stayed.alive.)/sum(deaths)) %>%
+  ungroup() %>%
+  filter(maps > 2) %>%
+  group_by(mode) %>%
+  mutate(rank.utk = rank(-utk,ties.method = 'min'), rank.fbr = rank(-fbr,ties.method = 'min'),
+         rank.kd = rank(-kd,ties.method = 'min'),rank.rating = rank(-rating,ties.method = 'min')) %>%
+  filter(player == "Assault") %>%
+  # filter(games > 2) %>%
   arrange(desc(rating)) %>%
-  data.frame() %>% head()
+  data.frame() %>% head(10)
 
 data %>%
   group_by(team,player, series.id) %>%
@@ -74,9 +86,10 @@ data %>%
   data.frame() %>% head()
 
 rating %>%
-  group_by(team,player) %>%
-  summarise(maps.win = sum(win),UA = sum(ifelse(rating > 0.7,1,0)),rating = mean(rating), n = n()) %>%
-  # filter(team == "Red Reserve") %>%
+  # filter(date >= as.Date('2018-08-17')) %>%
+  # group_by(player, mode) %>%
+  # summarise(rating = mean(rating), n = n(), games = length(unique(series.id))) %>%
+  filter(win == 0) %>%
   # filter(n > 5) %>%
   arrange(desc(rating)) %>%
-  data.frame() %>% head()
+  data.frame() #%>% head()
