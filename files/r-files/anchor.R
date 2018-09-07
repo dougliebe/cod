@@ -19,7 +19,7 @@ for(j in 1:length(location)) {
   print(location[j]) # show when you start each new event
   
   
-  for (i in 8:length(filenames)) {
+  for (i in 1:length(filenames)) {
     
     #read each json file in as list of lists
     data_json <- fromJSON(filenames[i], simplifyVector = T)
@@ -204,7 +204,10 @@ for(i in 1:nrow(kills)) {
   spawns = subset(spawn, spawn$id == game & spawn$player.team == team & 
                     spawn$time_ms %in% (time+1):(time+5000))
   if(nrow(spawns) > 0){
-  anchorKills <- rbind(anchorKills, data.frame(name = rep(kills[i,'data.id'], nrow(spawns)), dist = spawns$dist2nexthp))
+  anchorKills <- rbind(anchorKills, 
+                      data.frame(killer = rep(kills[i,'data.id'], nrow(spawns)),
+                      dist = spawns$dist2nexthp,
+                      map = spawns$map, hp = spawns$hp))
 }}
 
 
